@@ -1,4 +1,4 @@
-# 🧾 Portal de Productos — Práctica 1 (UNEATLANTICO)
+# 🧾 Portal de Productos — Práctica 1
 
 ## 👨‍💻 Datos del alumno
 **Nombre:** Sergio Moreno  
