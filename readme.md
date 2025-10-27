@@ -2,9 +2,7 @@
 
 ## 👨‍💻 Datos del alumno
 **Nombre:** Sergio Moreno  
-**Asignatura:** Programación Web  
-**Grado:** 4º Ingeniería Informática  
-**Universidad:** Universidad Europea del Atlántico  
+**Asignatura:** Programación Web
 
 ---
 
