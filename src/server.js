@@ -24,40 +24,28 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(morgan("dev"));
 app.use(express.json());
-app.use(express.static("src/public")); // sirve frontend y /uploads
+app.use(express.static("src/public")); // sirve frontend y /public estáticos
 
-/* ------------------------------- Rutas REST -------------------------------- */
-// Auth y productos
+/* --------------------------------- Rutas ----------------------------------- */
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/chat", chatRoutes); // /api/chat/health, /api/chat/usercount
 
-// Chat (rutas HTTP utilitarias: /api/chat/health, /api/chat/usercount)
-app.use("/api/chat", chatRoutes);
-
-// Healthcheck general
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-/* ------------------------ Subida de imágenes del chat ---------------------- */
-const chatDir = "src/public/uploads/chat";
-if (!fs.existsSync(chatDir)) fs.mkdirSync(chatDir, { recursive: true });
-
-const chatStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, chatDir),
-  filename: (_req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-});
+/* ------------------- Subida de imágenes del chat (BASE64) ------------------ */
+// Usamos memoria: no escribe a disco, apto para Render sin almacenamiento
 const uploadChat = multer({
-  storage: chatStorage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
-  fileFilter: (_req, file, cb) => {
-    if (!file.mimetype.startsWith("image/")) return cb(new Error("Solo imágenes"));
-    cb(null, true);
-  }
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 500 * 1024 } // 500 KB por imagen (ajusta si quieres)
 });
 
-// Endpoint HTTP para subir imagen del chat (devuelve URL pública)
+// Devuelve data URL (base64) para que el frontend la envíe por socket y se persista en Mongo
 app.post("/api/chat/upload", uploadChat.single("image"), (req, res) => {
   if (!req.file) return res.status(400).json({ ok: false, error: "Sin archivo" });
-  res.json({ ok: true, url: "/uploads/chat/" + req.file.filename });
+  const mime = req.file.mimetype || "image/jpeg";
+  const dataUrl = `data:${mime};base64,${req.file.buffer.toString("base64")}`;
+  res.json({ ok: true, url: dataUrl });
 });
 
 /* ------------------------- Middleware global de errores -------------------- */
@@ -97,14 +85,14 @@ let connected = 0;
 
 io.on("connection", async (socket) => {
   connected++;
-  app.set("usercount", connected);       // <- expone el contador para /api/chat/usercount
+  app.set("usercount", connected);
   io.emit("usercount", connected);
 
-  // Enviar historial reciente (últimos 20, orden cronológico)
+  // Historial (últimos 20 mensajes en orden cronológico)
   const history = await ChatMessage.find().sort({ ts: -1 }).limit(20);
   socket.emit("history", history.reverse());
 
-  // Mensaje de join a otros usuarios
+  // Mensaje de join a otros usuarios (no al propio)
   socket.broadcast.emit("system", {
     kind: "join",
     text: `🟢 ${socket.data.user.username} se ha unido`
@@ -118,7 +106,7 @@ io.on("connection", async (socket) => {
     });
   });
 
-  // Mensaje de chat (texto e imagen). Se revalida el token por defensa.
+  // Mensaje de chat (texto e imagen/base64). Revalidamos token por defensa.
   socket.on("chat message", async (payload = {}) => {
     try {
       jwt.verify(payload.token, JWT_SECRET);
@@ -127,20 +115,20 @@ io.on("connection", async (socket) => {
         user: socket.data.user.username,
         color: socket.data.user.color,
         text: payload.text || "",
-        image: payload.image || null,
+        image: payload.image || null, // aquí llega la data URL desde /api/chat/upload
         ts: new Date()
       };
 
       await ChatMessage.create(msg); // persistencia en Mongo
       io.emit("chat message", msg);  // broadcast a todos
     } catch {
-      // Si token inválido/expirado ignoramos el mensaje
+      // ignoramos si el token es inválido/expirado
     }
   });
 
   socket.on("disconnect", () => {
     connected = Math.max(0, connected - 1);
-    app.set("usercount", connected); // <- mantener valor expuesto por HTTP
+    app.set("usercount", connected);
     io.emit("usercount", connected);
     socket.broadcast.emit("system", {
       kind: "leave",
@@ -154,7 +142,7 @@ async function ensureDefaultAdmin() {
   const username = process.env.ADMIN_USERNAME || "admin";
   const password = process.env.ADMIN_PASSWORD || "admin";
 
-  // color estable segun nombre
+  // color estable según nombre
   let h = 0;
   for (let i = 0; i < username.length; i++)
     h = (h * 31 + username.charCodeAt(i)) % 360;
