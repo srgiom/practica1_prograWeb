@@ -1,21 +1,23 @@
 // src/routes/productRoutes.js
 import { Router } from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 import Product from "../models/Product.js";
 import { authenticateJWT, authorizeRole } from "../middleware/authenticateJWT.js";
 
 const router = Router();
 
-const uploadDir = "src/public/uploads";
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+// Subimos a memoria y convertimos a data URL (base64)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 500 * 1024 } // 500 KB (ajusta si quieres)
 });
-const upload = multer({ storage });
+
+function toDataUrl(file) {
+  if (!file) return null;
+  const b64 = file.buffer.toString("base64");
+  const mime = file.mimetype || "image/jpeg";
+  return `data:${mime};base64,${b64}`;
+}
 
 // GET /api/products
 router.get("/", async (_req, res) => {
@@ -30,12 +32,12 @@ router.get("/:id", async (req, res) => {
   res.json(p);
 });
 
-// POST /api/products  (admin)
+// POST crear (admin)
 router.post(
   "/",
   authenticateJWT,
   authorizeRole("admin"),
-  upload.single("imagen"),                            // <-- el nombre del campo debe ser 'imagen'
+  upload.single("imagen"), // <- el campo del input se llama "imagen"
   async (req, res) => {
     try {
       const { nombre, precio, descripcion } = req.body;
@@ -45,7 +47,7 @@ router.post(
         nombre,
         precio: parseFloat(precio),
         descripcion,
-        imagen: req.file ? "/uploads/" + req.file.filename : null
+        imagen: toDataUrl(req.file) // guardamos la data URL en Mongo
       });
 
       res.status(201).json(p);
@@ -55,16 +57,16 @@ router.post(
   }
 );
 
-// PUT /api/products/:id  (admin)
+// PUT editar (admin)
 router.put(
   "/:id",
   authenticateJWT,
   authorizeRole("admin"),
-  upload.single("imagen"),                            // <-- mismo nombre
+  upload.single("imagen"),
   async (req, res) => {
     try {
       const body = { ...req.body };
-      if (req.file) body.imagen = "/uploads/" + req.file.filename;
+      if (req.file) body.imagen = toDataUrl(req.file);
 
       const p = await Product.findByIdAndUpdate(
         req.params.id,
@@ -80,7 +82,7 @@ router.put(
   }
 );
 
-// DELETE /api/products/:id  (admin)
+// DELETE eliminar (admin)
 router.delete(
   "/:id",
   authenticateJWT,
