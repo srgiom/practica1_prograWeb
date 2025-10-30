@@ -1,8 +1,17 @@
 # 🧾 Portal de Productos — Práctica 1
 
-## 👨‍💻 Datos del alumno
+## 👨‍💻 Datos
 **Nombre:** Sergio Moreno  
-**Asignatura:** Programación Web
+**Asignatura:** Programación Web  
+
+---
+
+## 🌐 Enlace al proyecto desplegado
+
+🔗 **Aplicación en producción:**  
+👉 [https://practica1-prograweb.onrender.com/index.html](https://practica1-prograweb.onrender.com/index.html)
+
+El proyecto está desplegado en **Render**, conectado a **MongoDB Atlas**, y funciona completamente online con autenticación, CRUD de productos, chat en tiempo real y subida de imágenes persistente.
 
 ---
 
@@ -12,57 +21,46 @@ Desarrollar una aplicación web completa (**frontend + backend**) que permita:
 
 - Autenticación de usuarios mediante **JWT**.  
 - Gestión de roles (`admin` y `user`).  
-- CRUD completo de productos con persistencia en **MongoDB**.  
-- Un **chat en tiempo real** con **Socket.IO**.
+- CRUD completo de productos con persistencia en **MongoDB Atlas**.  
+- Un **chat en tiempo real** con **Socket.IO**.  
 
 Además, se añadieron mejoras opcionales para ampliar la calificación:
 
 1. **Persistencia del historial del chat** en la base de datos.  
-2. **Subida de imágenes** en productos.  
-3. **Envío de imágenes en el chat**.
+2. **Subida de imágenes** en productos (almacenadas en Mongo en formato Base64).  
+3. **Envío de imágenes en el chat**.  
 
 ---
 
-## ⚙️ Instalación y ejecución
+## ⚙️ Instalación y ejecución local
 
 ### 📋 Requisitos previos
 - [Node.js 18+](https://nodejs.org/en/)  
-- [MongoDB Community Server](https://www.mongodb.com/try/download/community) ejecutándose en local (puerto 27017 por defecto)
+- Una cuenta gratuita en [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
 
 ### 🧰 Instalación
 
 ```bash
-# 1. Clonar el repositorio o descomprimir la carpeta
+# 1. Clonar el repositorio
 cd portal-productos
 
 # 2. Instalar dependencias
 npm install
 
-# 3. Iniciar el servidor
-npm run dev
-# o
-npm start
-
-🌐 Acceso
-
-Una vez iniciado el servidor, abrir en el navegador:
-👉 http://localhost:3000
-
-⸻
-
-🔑 Configuración del entorno
-
-Crear un archivo .env en la raíz del proyecto con las siguientes variables:
-
+# 3. Configurar las variables de entorno (.env)
 PORT=3000
-MONGO_URI=mongodb://localhost:27017/portal
+MONGO_URI=mongodb+srv://usuario:contraseña@cluster.mongodb.net/portal
 JWT_SECRET=clave-ultrasecreta
 JWT_EXPIRES=2h
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin
 ALLOW_ADMIN_REGISTER=true
 
-Al arrancar, el sistema crea automáticamente un usuario administrador con las credenciales admin / admin.
+# 4. Iniciar el servidor
+npm start
+
+Luego abre en el navegador:
+👉 http://localhost:3000￼
 
 ⸻
 
@@ -75,7 +73,8 @@ src/
  │   └── ChatMessage.js
  ├── routes/
  │   ├── authRoutes.js
- │   └── productRoutes.js
+ │   ├── productRoutes.js
+ │   └── chatRoutes.js
  ├── middleware/
  │   └── authenticateJWT.js
  ├── public/
@@ -90,126 +89,109 @@ src/
 
 ⸻
 
-🧪 Cómo ejecutar y probar la aplicación
+🧪 Cómo probar la aplicación
 
 🟩 1. Registro y login
-	1.	Accede a http://localhost:3000.
+	1.	Accede a http://localhost:3000￼ o al despliegue online.
 	2.	Regístrate con un nuevo usuario o entra como admin (admin/admin).
-	3.	Tras iniciar sesión, se genera un token JWT almacenado en localStorage.
-	4.	El rol del usuario aparece en la parte superior derecha.
+	3.	Se genera un token JWT almacenado en localStorage.
+	4.	El rol se muestra en la esquina superior derecha.
 
 ⸻
 
 🟦 2. Gestión de productos (CRUD)
 	•	User: puede ver los productos existentes.
 	•	Admin: puede crear, editar y eliminar productos.
-	•	Cada producto puede incluir una imagen al crearlo o editarlo.
-	•	Las imágenes se guardan en /uploads/ dentro de src/public y se sirven directamente al cliente.
+	•	Cada producto incluye una imagen persistente, almacenada en MongoDB como Base64.
 
 Pasos para probar:
 	1.	Inicia sesión como admin.
-	2.	Usa el botón “Nuevo” para añadir un producto.
-	3.	Pulsa “Editar” para modificar los datos o cambiar la imagen.
-	4.	Pulsa “Eliminar” para borrarlo.
-	5.	Los cambios se reflejan instantáneamente en la lista.
+	2.	Usa el botón “Nuevo” para añadir un producto con imagen.
+	3.	Pulsa “Editar” para modificar datos o reemplazar la imagen.
+	4.	Pulsa “Eliminar” para borrar.
+	5.	Los cambios se reflejan instantáneamente.
 
 ⸻
 
 💬 3. Chat en tiempo real
-	•	Acceso mediante el botón “Chat” en la barra superior.
-	•	Solo usuarios autenticados pueden entrar (el servidor valida el JWT).
-	•	Funcionalidades implementadas:
+	•	Acceso mediante el botón “Chat”.
+	•	Solo usuarios autenticados pueden entrar (validación JWT en Socket.IO).
+	•	Características:
 	•	Mensajes con nombre, color, hora y texto.
 	•	Indicador de usuarios conectados.
-	•	Eventos de entrada y salida (🟢 / 🔴).
-	•	Estado “escribiendo…” visible en tiempo real.
-	•	Sonido y animación al recibir nuevos mensajes.
-	•	Envío de imágenes con el icono 📎.
-	•	Carga de los últimos 20 mensajes guardados en MongoDB.
+	•	Eventos de conexión/desconexión (🟢 / 🔴).
+	•	Estado “escribiendo…” en tiempo real.
+	•	Envío de imágenes (📎).
+	•	Historial persistente (últimos 20 mensajes desde MongoDB).
 
-Cómo probar:
-	1.	Abre dos navegadores diferentes y conéctate con distintos usuarios.
-	2.	Envía mensajes o imágenes.
-	3.	Observa los eventos de “usuario escribiendo”, el contador y el historial persistente.
+Prueba:
+	1.	Abre dos navegadores con diferentes usuarios.
+	2.	Envía mensajes e imágenes.
+	3.	Verás los eventos y el contador actualizándose en tiempo real.
 
 ⸻
 
 🗃️ Persistencia de datos
-	•	Usuarios: se almacenan con bcryptjs (hash de contraseñas).
-	•	Productos: colección products en MongoDB.
-	•	Mensajes del chat: colección chatmessages con campos user, text, image y timestamp.
-	•	Todo permanece tras reiniciar el servidor.
+	•	Usuarios: encriptados con bcryptjs.
+	•	Productos: colección products (imágenes como Base64).
+	•	Chat: colección chatmessages (mensajes y fotos como Base64).
+	•	Todo permanece tras reiniciar o redeployar el servidor.
 
 ⸻
 
 🧱 Decisiones de desarrollo
 
 🔧 Arquitectura modular
-
-El proyecto sigue una estructura MVC simplificada:
-	•	models/: define los esquemas de datos de MongoDB.
+	•	models/: define los esquemas de MongoDB.
 	•	routes/: gestiona las rutas REST.
-	•	middleware/: contiene la lógica de autenticación y roles.
-	•	public/: contiene el frontend servido desde Express.
-	•	server.js: punto de entrada que configura Express, Socket.IO y la conexión a Mongo.
+	•	middleware/: valida JWT y roles.
+	•	public/: frontend servido por Express.
+	•	server.js: núcleo (Express + Socket.IO + Mongo Atlas).
 
 🔐 Autenticación JWT
-	•	Los tokens se generan con jsonwebtoken y se validan tanto en las rutas REST como en los sockets.
-	•	Cada token incluye _id, username, role y color.
-	•	Los middlewares authenticateJWT y authorizeRole garantizan la seguridad.
+	•	JWT en rutas REST y sockets.
+	•	Incluye _id, username, role, color.
+	•	Middlewares authenticateJWT y authorizeRole.
 
-🧠 Gestión de roles
-	•	user: acceso de solo lectura (visualización de productos y chat).
-	•	admin: acceso total al CRUD.
-	•	Se usa un middleware para validar el rol antes de ejecutar cada acción protegida.
+🧠 Roles y seguridad
+	•	user: lectura.
+	•	admin: CRUD completo.
+	•	Validación tanto en backend como en frontend.
 
-💾 Persistencia y subida de imágenes
-	•	Multer maneja la subida de archivos.
-	•	Las imágenes se guardan en src/public/uploads/ con un nombre único.
-	•	Validación del tipo MIME y tamaño máximo de 2 MB.
-	•	Los productos y los mensajes del chat almacenan la ruta de la imagen en MongoDB.
+💾 Manejo de imágenes
+	•	Imágenes convertidas a Base64 y guardadas directamente en MongoDB.
+	•	Sin necesidad de carpetas /uploads, lo que permite despliegues en servidores sin disco persistente como Render.
 
-⚙️ Chat persistente con Socket.IO
-	•	Los mensajes (texto o imagen) se guardan en la base de datos al enviarse.
-	•	Al conectarse un usuario, recibe los últimos 20 mensajes guardados.
-	•	Los eventos del socket (connection, disconnect, typing, chat message) mantienen la sincronización en tiempo real.
+⚙️ Chat con persistencia
+	•	Mensajes (texto o imagen) guardados en MongoDB.
+	•	Socket.IO mantiene la sincronización en tiempo real.
 
-🎨 Interfaz de usuario
-	•	Tema oscuro moderno con colores suaves y esquinas redondeadas.
-	•	Interfaz responsive: funciona tanto en ordenador como en móvil.
-	•	Animaciones de hover, zoom en imágenes y sombras.
-	•	Se priorizó la claridad visual y la usabilidad.
+🎨 Interfaz
+	•	Tema oscuro, diseño limpio y responsive.
+	•	Animaciones suaves, botones redondeados, modales claros.
 
 ⸻
 
 📦 Dependencias principales
 
-Paquete	Uso principal
-express	Servidor web y gestión de rutas
-mongoose	Conexión y modelado de datos en MongoDB
-jsonwebtoken	Generación y validación de tokens JWT
-bcryptjs	Encriptación de contraseñas
-socket.io	Comunicación en tiempo real
-multer	Subida y gestión de archivos
-cors	Permitir peticiones desde el frontend
-morgan	Logging de peticiones HTTP
+Paquete	Uso
+express	Servidor web y rutas REST
+mongoose	Conexión y modelado de datos en MongoDB Atlas
+jsonwebtoken	Autenticación JWT
+bcryptjs	Hash de contraseñas
+socket.io	Chat en tiempo real
+multer	Procesamiento de archivos (ahora memoria/base64)
+cors	Peticiones cruzadas
+morgan	Logging HTTP
 
 
 ⸻
 
-🧰 Ampliaciones implementadas (extras)
+🧰 Ampliaciones implementadas
 
 Extra	Descripción	Estado
-🗂️ Historial de chat persistente	Guarda mensajes en MongoDB y los carga al conectarse un usuario	✅
-🖼️ Imágenes en productos	Subida y visualización en CRUD	✅
-📎 Imágenes en el chat	Envío y visualización de fotos en tiempo real	✅
-🔔 Sonido y animaciones	Mejora de la experiencia de usuario	✅
-
-
-⸻
-
-📈 Conclusión
-
-El proyecto cumple todos los requisitos del enunciado y añade tres ampliaciones opcionales.
-Durante el desarrollo se aplicaron principios de modularidad, reutilización y separación de responsabilidades.
-El resultado es una aplicación completa, funcional y extensible, con integración total entre backend y frontend, y preparada para desplegarse en un entorno real.
+🗂️ Historial de chat persistente	Guarda mensajes en MongoDB	✅
+🖼️ Imágenes en productos	Guardadas como Base64 en MongoDB	✅
+📎 Imágenes en chat	Envío y persistencia Base64	✅
+☁️ Despliegue en Render + MongoDB Atlas	Full stack funcional online	✅
+🔔 Sonido y animaciones	UX mejorada en chat	✅
