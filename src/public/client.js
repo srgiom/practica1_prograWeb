@@ -100,18 +100,13 @@ function cacheBust(url) {
   const sep = url.includes("?") ? "&" : "?";
   return `${url}${sep}t=${Date.now()}`;
 }
-function normUrl(raw) {
+
+// Devuelve un src válido para <img> respetando data: y http(s)
+function asImgSrc(raw, bust = false) {
   if (!raw) return null;
-  // admite 'imagen' o 'image' y prefija '/'
-  const u = String(raw).replace(/^\/+/, "");
-  return "/" + u;
-}
-function productImage(p, bust=false) {
-  // tolerancia a nombres de campo diferentes
-  const raw = p.imagen ?? p.image ?? p.foto ?? null;
-  if (!raw) return null;
-  const u = normUrl(raw);
-  return bust ? cacheBust(u) : u;
+  if (raw.startsWith("data:")) return raw; // base64
+  const url = (raw.startsWith("http") || raw.startsWith("/")) ? raw : ("/" + raw.replace(/^\/+/, ""));
+  return bust ? cacheBust(url) : url;
 }
 
 // -------------------- Auth UI --------------------
@@ -193,7 +188,9 @@ async function loadProducts(forceBust = false) {
     const li = document.createElement("li");
     li.className = "row item";
 
-    const thumb = productImage(p, forceBust);
+    const rawImg = p.imagen ?? p.image ?? p.foto ?? null;
+    const thumb  = asImgSrc(rawImg, forceBust);
+
     const imgHTML = thumb
       ? `<img src="${thumb}" alt="" style="height:40px;width:40px;object-fit:cover;border-radius:8px;margin-right:8px;border:1px solid #1f2937">`
       : "";
@@ -215,9 +212,9 @@ async function loadProducts(forceBust = false) {
     // Ver detalle (con imagen grande si existe)
     li.querySelector('[data-act="view"]').onclick = async () => {
       const d = await API.getProduct(p._id);
-      const big = productImage(d, true);
+      const dImg = asImgSrc(d.imagen ?? d.image ?? d.foto, true);
       detailBody.innerHTML = `
-        ${big ? `<div style="margin-bottom:10px"><img src="${big}" style="max-width:100%;border-radius:10px;border:1px solid #1f2937"></div>` : ""}
+        ${dImg ? `<div style="margin-bottom:10px"><img src="${dImg}" style="max-width:100%;border-radius:10px;border:1px solid #1f2937"></div>` : ""}
         <div><strong>Nombre:</strong> ${d.nombre}</div>
         <div><strong>Precio:</strong> ${Number(d.precio).toFixed(2)} €</div>
         <div><strong>Descripción:</strong> ${d.descripcion || ""}</div>`;
