@@ -64,9 +64,8 @@ const API = {
 const $ = (s) => document.querySelector(s);
 const authCard = $("#auth-card");
 const authMsg = $("#auth-msg");
-const btnLogin = $("#btn-login");
-const btnRegister = $("#btn-register");
-const btnToggle = $("#btn-toggle");
+const btnAuth = $("#btn-auth");     // único botón de acción
+const btnToggle = $("#btn-toggle"); // alternar modo
 const btnLogout = $("#btn-logout");
 const userPill = $("#user-pill");
 const linkChat = $("#link-chat");
@@ -88,7 +87,7 @@ const fImg = document.getElementById("f-img");
 const editCancel = document.getElementById("edit-cancel");
 const editSave = document.getElementById("edit-save");
 
-let mode = "login";
+let mode = "login"; // "login" o "register"
 let editingId = null;
 
 // -------------------- Helpers UI --------------------
@@ -101,45 +100,44 @@ function cacheBust(url) {
   return `${url}${sep}t=${Date.now()}`;
 }
 
-// Devuelve un src válido para <img> respetando data: y http(s)
 function asImgSrc(raw, bust = false) {
   if (!raw) return null;
-  if (raw.startsWith("data:")) return raw; // base64
+  if (raw.startsWith("data:")) return raw;
   const url = (raw.startsWith("http") || raw.startsWith("/")) ? raw : ("/" + raw.replace(/^\/+/, ""));
   return bust ? cacheBust(url) : url;
 }
 
 // -------------------- Auth UI --------------------
-btnToggle.onclick = () => {
-  mode = mode === "login" ? "register" : "login";
+function updateAuthUI() {
   $("#auth-title").textContent = mode === "login" ? "Iniciar sesión" : "Registro";
+  btnAuth.textContent = mode === "login" ? "Entrar" : "Registrarme";
   btnToggle.textContent = mode === "login" ? "Cambiar a registro" : "Cambiar a login";
   authMsg.textContent = "";
+}
+
+btnToggle.onclick = () => {
+  mode = mode === "login" ? "register" : "login";
+  updateAuthUI();
 };
 
-btnLogin.onclick = async () => {
+btnAuth.onclick = async () => {
   try {
     const u = $("#u").value.trim();
     const p = $("#p").value;
     if (!u || !p) throw new Error("Rellena usuario y contraseña");
-    const token = await API.login(u, p);
-    localStorage.setItem("jwt", token);
-    authMsg.textContent = "Login correcto ✓";
-    await boot();
-  } catch (e) {
-    authMsg.textContent = e.message;
-  }
-};
 
-btnRegister.onclick = async () => {
-  try {
-    const u = $("#u").value.trim();
-    const p = $("#p").value;
-    if (!u || !p) throw new Error("Rellena usuario y contraseña");
-    const role = u === "admin" ? "admin" : "user";
-    await API.register(u, p, role);
-    authMsg.textContent = "Registro correcto. Inicia sesión.";
-    mode = "login"; btnToggle.click();
+    if (mode === "login") {
+      const token = await API.login(u, p);
+      localStorage.setItem("jwt", token);
+      authMsg.textContent = "Login correcto ✓";
+      await boot();
+    } else {
+      const role = u === "admin" ? "admin" : "user";
+      await API.register(u, p, role);
+      authMsg.textContent = "Registro correcto. Inicia sesión.";
+      mode = "login";
+      updateAuthUI();
+    }
   } catch (e) {
     authMsg.textContent = e.message;
   }
@@ -173,7 +171,7 @@ editSave.onclick = async () => {
       await API.createProduct({ nombre, precio, descripcion, imagenFile });
     }
     close(modalEdit);
-    await loadProducts(true); // forceBust
+    await loadProducts(true);
   } catch (e) { alert(e.message); }
 };
 
@@ -209,7 +207,7 @@ async function loadProducts(forceBust = false) {
          <button class="btn danger" data-role="admin" data-act="del">Eliminar</button>
        </div>`;
 
-    // Ver detalle (con imagen grande si existe)
+    // Ver detalle
     li.querySelector('[data-act="view"]').onclick = async () => {
       const d = await API.getProduct(p._id);
       const dImg = asImgSrc(d.imagen ?? d.image ?? d.foto, true);
@@ -221,18 +219,16 @@ async function loadProducts(forceBust = false) {
       open(modalDetail);
     };
 
-    // Editar
     li.querySelector('[data-act="edit"]').onclick = () => {
       editingId = p._id;
       editTitle.textContent = "Editar producto";
       fNombre.value = p.nombre || "";
       fPrecio.value = p.precio != null ? p.precio : "";
       fDesc.value = p.descripcion || "";
-      fImg.value = ""; // por seguridad, no se pre-carga
+      fImg.value = "";
       open(modalEdit);
     };
 
-    // Eliminar
     li.querySelector('[data-act="del"]').onclick = async () => {
       if (!confirm(`¿Eliminar "${p.nombre}"?`)) return;
       await API.delProduct(p._id);
@@ -277,4 +273,5 @@ async function boot() {
 }
 
 document.getElementById("detail-close")?.addEventListener("click", () => close(modalDetail));
+updateAuthUI();
 boot();
