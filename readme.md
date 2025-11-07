@@ -158,17 +158,3 @@ src/
 🎨 Interfaz
 	•	Tema oscuro, diseño limpio y responsive.
 	•	Animaciones suaves, botones redondeados, modales claros.
-
-⸻
-
-📦 Dependencias principales
-
-Paquete	Uso
-express	Servidor web y rutas REST
-mongoose	Conexión y modelado de datos en MongoDB Atlas
-jsonwebtoken	Autenticación JWT
-bcryptjs	Hash de contraseñas
-socket.io	Chat en tiempo real
-multer	Procesamiento de archivos (ahora memoria/base64)
-cors	Peticiones cruzadas
-morgan	Logging HTTP
