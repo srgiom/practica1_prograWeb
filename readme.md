@@ -27,7 +27,7 @@ Desarrollar una aplicación web completa (**frontend + backend**) que permita:
 - CRUD completo de productos con persistencia en **MongoDB Atlas**.  
 - Un **chat en tiempo real** con **Socket.IO**.  
 
-Además, se añadieron mejoras opcionales para ampliar la calificación:
+Además, se añadieron mejoras:
 
 1. **Persistencia del historial del chat** en la base de datos.  
 2. **Subida de imágenes** en productos (almacenadas en Mongo en formato Base64).  
@@ -92,8 +92,6 @@ src/
 
 ⸻
 
-🧪 Cómo probar la aplicación
-
 🟩 1. Registro y login
 	1.	Accede a http://localhost:3000￼ o al despliegue online.
 	2.	Regístrate con un nuevo usuario o entra como admin (admin/admin).
@@ -107,13 +105,6 @@ src/
 	•	Admin: puede crear, editar y eliminar productos.
 	•	Cada producto incluye una imagen persistente, almacenada en MongoDB como Base64.
 
-Pasos para probar:
-	1.	Inicia sesión como admin.
-	2.	Usa el botón “Nuevo” para añadir un producto con imagen.
-	3.	Pulsa “Editar” para modificar datos o reemplazar la imagen.
-	4.	Pulsa “Eliminar” para borrar.
-	5.	Los cambios se reflejan instantáneamente.
-
 ⸻
 
 💬 3. Chat en tiempo real
@@ -125,12 +116,7 @@ Pasos para probar:
 	•	Eventos de conexión/desconexión (🟢 / 🔴).
 	•	Estado “escribiendo…” en tiempo real.
 	•	Envío de imágenes (📎).
-	•	Historial persistente (últimos 20 mensajes desde MongoDB).
-
-Prueba:
-	1.	Abre dos navegadores con diferentes usuarios.
-	2.	Envía mensajes e imágenes.
-	3.	Verás los eventos y el contador actualizándose en tiempo real.
+	•	Historial persistente.
 
 ⸻
 
@@ -186,15 +172,3 @@ socket.io	Chat en tiempo real
 multer	Procesamiento de archivos (ahora memoria/base64)
 cors	Peticiones cruzadas
 morgan	Logging HTTP
-
-
-⸻
-
-🧰 Ampliaciones implementadas
-
-Extra	Descripción	Estado
-🗂️ Historial de chat persistente	Guarda mensajes en MongoDB	✅
-🖼️ Imágenes en productos	Guardadas como Base64 en MongoDB	✅
-📎 Imágenes en chat	Envío y persistencia Base64	✅
-☁️ Despliegue en Render + MongoDB Atlas	Full stack funcional online	✅
-🔔 Sonido y animaciones	UX mejorada en chat	✅
