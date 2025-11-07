@@ -9,7 +9,7 @@
 ## 🌐 Enlace al proyecto desplegado
 
 🔗 **Código de la aplicación:**  
-https://github.com/srgiom/practica1_prograWeb
+👉 https://github.com/srgiom/practica1_prograWeb
 
 🔗 **Aplicación en producción:**  
 👉 [https://practica1-prograweb.onrender.com/index.html](https://practica1-prograweb.onrender.com/index.html)
